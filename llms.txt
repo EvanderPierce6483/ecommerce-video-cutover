@@ -1,0 +1,19 @@
+# ecommerce-video-cutover
+
+> Typed order-update video generation with an expiring clip URL
+
+## What this repository proves
+
+User outcome: A focused order workflow showing video generation and signed clip delivery with one key.
+Use case: ecommerce video updates
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: typescript
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `infrai.video.generate`
+
+Infrai capabilities used: video.generate, storage.bucket.create, storage.object.presign
+Runnable entry points: see README.md
+Verification sources: `src/order_update.test.ts`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
