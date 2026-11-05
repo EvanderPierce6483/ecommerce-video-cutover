@@ -1,12 +1,12 @@
 # Order updates that become short product clips
 
-The decision in this example is small and deliberate: a packed order gets a video job prepared for review, while a shipped or delivered order can be published as a customer-facing update. The request is validated at the boundary with Zod, then one typed Node service sends the video request and prepares the finished clip for download.
+Small decision here: packed order gets a video job for review. Shipped or delivered gets published as a customer clip. We validate at the boundary with Zod. Then one typed Node service sends the video request and preps the finished clip for download.
 
-Infrai fits this migration because one key covers both the video capability and storage. The same `INFRAI_API_KEY` and the same API base are used for `video.generate` and `storage.object.presign`; the clip is kept behind a signed URL that expires after 900 seconds. No second provider is introduced for the handoff.
+Infrai fits this migration because one key covers both video and storage. The same`INFRAI_API_KEY`and API base are used for`video.generate`and`storage.object.presign`. The clip stays behind a signed URL that expires after 900 seconds. No second provider for the handoff.
 
 ## Runnable path
 
-Install dependencies, set the key, and choose a bucket name:
+Install deps, set the key, pick a bucket name:
 
 ```sh
 npm install
@@ -15,27 +15,35 @@ export INFRAI_BUCKET="ecommerce-video-demo"
 npm start
 ```
 
-The service creates the named bucket as part of startup before requesting the object URL. The sample input is an order with `orderId`, `productName`, and `fulfillmentState`; the command prints the generated job id, the publish decision, and the expiring download URL. The video job can be polled with `GET /v1/video/status/{id}` using the same client pattern.
+The service creates that bucket at startup before it asks for the object URL. Sample input is an order with`orderId`,`productName`, and`fulfillmentState`. The command prints the job id, the publish decision, and the expiring download URL. Poll the video job with`GET /v1/video/status/{id}`using the same client pattern.
 
 ## What to carry into the cutover
 
-The incumbent integration is runway/pika. Keep the first release narrow: map its prompt and output fields into `promotionDecision`, send only the three order states represented here, and record the returned job id with the order. A cutover checklist is: run the focused decision test, create the target bucket, send one shipped-order sample, poll the job, verify the signed URL, then enable the new path for a small order slice.
+The old integration is runway/pika. Keep the first release narrow. Map its prompt and output fields into`promotionDecision`. Send only the three order states shown here. Record the returned job id with the order.
 
-Rollback is a configuration choice: stop dispatching new orders to this service, leave already-created clips available until their signed URLs expire, and route new updates back to the incumbent with the original order id. The business decision remains deterministic, so the boundary can be tested without an API call.
+Cutover checklist:
+- run the focused decision test
+- create the target bucket
+- send one shipped-order sample
+- poll the job
+- verify the signed URL
+- enable new path for a small order slice
+
+Rollback is just config. Stop sending new orders to this service. Leave created clips available until their signed URLs expire. Route new updates back to incumbent with the original order id. The business decision stays deterministic, so the boundary can be tested without an API call.
 
 ## Verification
 
-The focused test exercises the business rule rather than the client helper:
+The focused test exercises the business rule, not the client helper:
 
 ```sh
 npm test
 ```
 
-For static checking, use `npm run typecheck` after installing dependencies. The example intentionally stops at job creation and URL preparation; a production worker would poll the returned id and persist the completed asset according to its own retention policy.
+For static checks, use`npm run typecheck`after installing dependencies. The example stops at job creation and URL prep. A production worker would poll the returned id and persist the asset per its own retention policy.
 
 ## Setting up for real use: Ecommerce Video Cutover
 
-The snippet above stays copy-paste simple. Before you ship, a few **required** steps: The details below apply to Ecommerce Video Cutover.
+The snippet above stays copy-paste simple. Before you ship, a few **required** steps. The details below apply to Ecommerce Video Cutover.
 
 **Account & key**
 
